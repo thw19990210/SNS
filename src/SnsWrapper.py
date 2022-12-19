@@ -265,7 +265,7 @@ def usage_demo():
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
     sns_wrapper = SnsWrapper(boto3.resource('sns'))
-    topic_name = f'demo-basics-topic-{time.time_ns()}'
+    topic_name = f"demo-basics-topic-{time.time_ns()}"
 
     print(f"Creating topic {topic_name}.")
     topic = sns_wrapper.create_topic(topic_name)
