@@ -62,7 +62,7 @@ def load_user(user_id):
 @app.route("/")
 def index():
     if not current_user.is_authenticated:
-        return render_template('login.html')
+        return render_template('index.html')
 
 
 @app.route("/login")
@@ -75,10 +75,10 @@ def login():
     # scopes that let you retrieve user's profile from Google
     request_uri = client.prepare_request_uri(
         authorization_endpoint,
-        redirect_uri="https://ms3-6156-ht2568.s3.us-west-2.amazonaws.com/index.html",
+        redirect_uri="https://d1gfn8tb5ianp7.cloudfront.net/templates/index.html",
         scope=["openid", "email", "profile"],
     )
-
+    SnsWrapper.lambda_handler("You have successully log in EVE Statistic Cloud Service!")
     SnsWrapper.send_message("You have successully log in EVE Statistic Cloud Service!")
     return redirect(request_uri)
 
