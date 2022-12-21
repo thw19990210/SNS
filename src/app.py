@@ -4,13 +4,13 @@ import os
 import sqlite3
 
 # Third party libraries
-from flask import Flask, redirect, request, url_for
+from flask import Flask, redirect, request, url_for, render_template
 from flask_login import (
     LoginManager,
     current_user,
     login_required,
     login_user,
-    logout_user,
+    logout_user
 )
 from oauthlib.oauth2 import WebApplicationClient
 import requests
@@ -18,7 +18,8 @@ import requests
 # Internal imports
 from db import init_db_command
 from user import User
-from sns import SnsWrapper
+from SnsWrapper import SnsWrapper
+from datetime import datetime
 # Configuration
 GOOGLE_CLIENT_ID = "293466254383-10s0bn8udjriju31h0vhg7ktt03omht6.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
@@ -27,7 +28,7 @@ GOOGLE_DISCOVERY_URL = (
 )
 
 # Flask app setup
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 # User session management setup
@@ -60,17 +61,8 @@ def load_user(user_id):
 
 @app.route("/")
 def index():
-    if current_user.is_authenticated:
-        return (
-            "<p>Hello, {}! You're logged in! Email: {}</p>"
-            "<div><p>Google Profile Picture:</p>"
-            '<img src="{}" alt="Google profile pic"></img></div>'
-            '<a class="button" href="/logout">Logout</a>'.format(
-                current_user.name, current_user.email, current_user.profile_pic
-            )
-        )
-    else:
-        return '<a class="button" href="/login">Google Login</a>'
+    if not current_user.is_authenticated:
+        return render_template('login.html')
 
 
 @app.route("/login")
@@ -86,6 +78,8 @@ def login():
         redirect_uri="https://ms3-6156-ht2568.s3.us-west-2.amazonaws.com/index.html",
         scope=["openid", "email", "profile"],
     )
+
+    SnsWrapper.send_message("You have successully log in EVE Statistic Cloud Service!")
     return redirect(request_uri)
 
 
@@ -157,9 +151,13 @@ def logout():
     logout_user()
     return redirect(url_for("index"))
 
-@app.route("/send")
-def send():
-    w = SnsWrapper.publish_message("Notification", "success", {"111" : "111"})
+
+@app.route("/sns", methods=['GET'])
+def sns():
+    msg = request.args.get('msg')
+    SnsWrapper.send_message(msg)
+    SnsWrapper.lambda_handler(msg)
+    return "Successful"
 
 
 def get_google_provider_cfg():
